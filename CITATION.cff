@@ -1,0 +1,27 @@
+cff-version: 1.2.0
+title: "usqldb-js: PostgreSQL 17-compatible catalog layer for UQA (TypeScript)"
+message: "If you use this software, please cite it as below."
+type: software
+authors:
+  - given-names: Jaepil
+    family-names: Jeong
+    email: jaepil@cognica.io
+    affiliation: "Cognica, Inc."
+repository-code: "https://github.com/cognica-io/usqldb-js"
+license: AGPL-3.0-only
+version: 0.1.0
+date-released: "2026-04-01"
+abstract: >-
+  PostgreSQL 17-compatible information_schema and pg_catalog layer for UQA,
+  enabling standard PostgreSQL tools to introspect UQA databases.
+  TypeScript port that runs in web browsers and Node.js.
+keywords:
+  - postgresql
+  - information-schema
+  - pg-catalog
+  - uqa
+  - sql
+  - compatibility
+  - system-catalog
+  - typescript
+  - browser

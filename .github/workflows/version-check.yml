@@ -1,0 +1,37 @@
+name: Version consistency check
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  version-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Check version consistency
+        run: |
+          set -euo pipefail
+
+          PKG_VERSION=$(node -e "console.log(require('./package.json').version)")
+
+          CITATION_VERSION=$(grep '^version:' CITATION.cff | sed 's/^version: *//')
+
+          echo "package.json:  $PKG_VERSION"
+          echo "CITATION.cff:  $CITATION_VERSION"
+
+          FAILED=0
+
+          if [ "$PKG_VERSION" != "$CITATION_VERSION" ]; then
+            echo "::error::Version mismatch: package.json ($PKG_VERSION) != CITATION.cff ($CITATION_VERSION)"
+            FAILED=1
+          fi
+
+          if [ "$FAILED" -eq 1 ]; then
+            exit 1
+          fi
+
+          echo "All versions match: $PKG_VERSION"
