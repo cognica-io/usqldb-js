@@ -2,16 +2,16 @@
 
 PostgreSQL 17-compatible `information_schema` and `pg_catalog` layer for [UQA](https://github.com/cognica-io/uqa-js).
 
-usqldb-js extends the UQA SQL engine with a comprehensive set of PostgreSQL system catalog views so that standard PostgreSQL tools -- psql, SQLAlchemy, DBeaver, DataGrip, Django, and others -- can introspect the database as if it were a real PostgreSQL 17 instance.
+usqldb-js extends the UQA SQL engine with a comprehensive set of PostgreSQL system catalog views so that standard PostgreSQL tools — psql, SQLAlchemy, DBeaver, DataGrip, Django, and others — can introspect the database as if it were a real PostgreSQL 17 instance.
 
 TypeScript port of [usqldb](https://github.com/cognica-io/usqldb) that runs in **web browsers** and Node.js.
 
 ## Features
 
-- **23 information_schema views** -- schemata, tables, columns, constraints, views, sequences, routines, foreign tables, triggers, and more.
-- **35 pg_catalog tables** -- pg_class, pg_attribute, pg_type, pg_constraint, pg_index, pg_proc, pg_settings, statistics views, and more, with consistent OID cross-references across all of them.
-- **Drop-in engine** -- `USQLEngine` is a drop-in replacement for `Engine` from `@jaepil/uqa`. Import it, and every query gets full catalog support.
-- **Browser-compatible** -- ESM and UMD builds with no Node.js-specific APIs.
+- **23 information_schema views** — schemata, tables, columns, constraints, views, sequences, routines, foreign tables, triggers, and more.
+- **35 pg_catalog tables** — pg_class, pg_attribute, pg_type, pg_constraint, pg_index, pg_proc, pg_settings, statistics views, and more, with consistent OID cross-references across all of them.
+- **Drop-in engine** — `USQLEngine` is a drop-in replacement for `Engine` from `@jaepil/uqa`. Import it, and every query gets full catalog support.
+- **Browser-compatible** — ESM and UMD builds with no Node.js-specific APIs.
 
 ## Requirements
 
@@ -67,7 +67,7 @@ const types = await engine.sql(
 src/
   index.ts                          Public API exports
   core/
-    engine.ts                       USQLEngine -- drop-in replacement for Engine
+    engine.ts                       USQLEngine — drop-in replacement for Engine
     compiler.ts                     Row normalization utilities
   pg-compat/
     oid.ts                          OID allocation and PostgreSQL type mapping
@@ -105,4 +105,4 @@ AGPL-3.0-only
 
 ## Author
 
-Jaepil Jeong (jaepil@cognica.io) -- [Cognica, Inc.](https://github.com/cognica-io)
+Jaepil Jeong (jaepil@cognica.io) — [Cognica, Inc.](https://github.com/cognica-io)

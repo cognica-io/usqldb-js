@@ -6,8 +6,8 @@ Initial release. TypeScript port of [usqldb](https://github.com/cognica-io/usqld
 
 ### Core
 
-- `USQLEngine` -- drop-in replacement for `Engine` from `@jaepil/uqa` with full PostgreSQL 17 catalog support.
-- `OIDAllocator` -- deterministic OID assignment matching PostgreSQL 17 conventions (system 0-16383, user 16384+).
+- `USQLEngine` — drop-in replacement for `Engine` from `@jaepil/uqa` with full PostgreSQL 17 catalog support.
+- `OIDAllocator` — deterministic OID assignment matching PostgreSQL 17 conventions (system 0-16383, user 16384+).
 - Row normalization for Arrow-compatible storage (boolean to integer, NaN/Infinity to null).
 
 ### PostgreSQL Compatibility
@@ -19,4 +19,4 @@ Initial release. TypeScript port of [usqldb](https://github.com/cognica-io/usqld
 ### Browser Support
 
 - ESM and UMD builds via Vite.
-- No Node.js-specific APIs -- runs in web browsers.
+- No Node.js-specific APIs — runs in web browsers.
