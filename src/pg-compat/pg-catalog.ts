@@ -184,11 +184,9 @@ function getIndexManager(
   return indexes;
 }
 
-type TableBuilder = (
-  engine: EngineInternals,
-  oids: OIDAllocator,
-) => BuildResult;
+type TableBuilder = (engine: EngineInternals, oids: OIDAllocator) => BuildResult;
 
+// eslint-disable-next-line @typescript-eslint/no-extraneous-class
 export class PGCatalogProvider {
   private static readonly _TABLES: Readonly<Record<string, TableBuilder>> = {
     pg_namespace: PGCatalogProvider._buildPgNamespace,
@@ -232,11 +230,7 @@ export class PGCatalogProvider {
     return Object.keys(PGCatalogProvider._TABLES);
   }
 
-  static build(
-    tableName: string,
-    engine: Engine,
-    oids: OIDAllocator,
-  ): BuildResult {
+  static build(tableName: string, engine: Engine, oids: OIDAllocator): BuildResult {
     const builder = PGCatalogProvider._TABLES[tableName];
     if (builder === undefined) {
       throw new Error(`Unknown pg_catalog table: '${tableName}'`);
@@ -328,8 +322,7 @@ export class PGCatalogProvider {
       const tableOid = oids.get("table", tname) ?? 0;
       const typeOidVal = oids.get("table_type", tname) ?? 0;
       const hasIndex =
-        table.primaryKey !== null ||
-        [...table.columns.values()].some((c) => c.unique);
+        table.primaryKey !== null || [...table.columns.values()].some((c) => c.unique);
       const nChecks = table.checkConstraints.length;
       const reltuples = table.rowCount;
 
@@ -522,9 +515,7 @@ export class PGCatalogProvider {
 
         // String types use default collation
         const collation =
-          colTypeOid === 25 || colTypeOid === 1042 || colTypeOid === 1043
-            ? 100
-            : 0;
+          colTypeOid === 25 || colTypeOid === 1042 || colTypeOid === 1043 ? 100 : 0;
 
         rows.push({
           attrelid: tableOid,
@@ -621,9 +612,7 @@ export class PGCatalogProvider {
           attislocal: true,
           attinhcount: 0,
           attcollation:
-            colTypeOid === 25 || colTypeOid === 1042 || colTypeOid === 1043
-              ? 100
-              : 0,
+            colTypeOid === 25 || colTypeOid === 1042 || colTypeOid === 1043 ? 100 : 0,
           attacl: null,
           attoptions: null,
           attfdwoptions: null,
@@ -1448,8 +1437,7 @@ export class PGCatalogProvider {
     for (const tname of [...engine._tables.keys()].sort()) {
       const table = engine._tables.get(tname)!;
       const hasIdx =
-        table.primaryKey !== null ||
-        [...table.columns.values()].some((c) => c.unique);
+        table.primaryKey !== null || [...table.columns.values()].some((c) => c.unique);
       rows.push({
         schemaname: SCHEMA,
         tablename: tname,
@@ -1491,15 +1479,9 @@ export class PGCatalogProvider {
 
   private static _buildPgIndexes(
     engine: EngineInternals,
-    oids: OIDAllocator,
+    _oids: OIDAllocator,
   ): BuildResult {
-    const columns = [
-      "schemaname",
-      "tablename",
-      "indexname",
-      "tablespace",
-      "indexdef",
-    ];
+    const columns = ["schemaname", "tablename", "indexname", "tablespace", "indexdef"];
     const rows: Row[] = [];
 
     const indexes = getIndexManager(engine);
@@ -2658,12 +2640,7 @@ export class PGCatalogProvider {
     _engine: EngineInternals,
     _oids: OIDAllocator,
   ): BuildResult {
-    const columns = [
-      "name",
-      "default_version",
-      "installed_version",
-      "comment",
-    ];
+    const columns = ["name", "default_version", "installed_version", "comment"];
     const rows: Row[] = [
       {
         name: "plpgsql",

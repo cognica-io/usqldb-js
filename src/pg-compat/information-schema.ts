@@ -145,11 +145,9 @@ function effectiveTypeName(cdef: ColumnDefInternals): string {
   return cdef.typeName;
 }
 
-type ViewBuilder = (
-  engine: EngineInternals,
-  oids: OIDAllocator,
-) => BuildResult;
+type ViewBuilder = (engine: EngineInternals, oids: OIDAllocator) => BuildResult;
 
+// eslint-disable-next-line @typescript-eslint/no-extraneous-class
 export class InformationSchemaProvider {
   private static readonly _VIEWS: Readonly<Record<string, ViewBuilder>> = {
     schemata: InformationSchemaProvider._buildSchemata,
@@ -157,10 +155,8 @@ export class InformationSchemaProvider {
     columns: InformationSchemaProvider._buildColumns,
     table_constraints: InformationSchemaProvider._buildTableConstraints,
     key_column_usage: InformationSchemaProvider._buildKeyColumnUsage,
-    referential_constraints:
-      InformationSchemaProvider._buildReferentialConstraints,
-    constraint_column_usage:
-      InformationSchemaProvider._buildConstraintColumnUsage,
+    referential_constraints: InformationSchemaProvider._buildReferentialConstraints,
+    constraint_column_usage: InformationSchemaProvider._buildConstraintColumnUsage,
     check_constraints: InformationSchemaProvider._buildCheckConstraints,
     views: InformationSchemaProvider._buildViews,
     sequences: InformationSchemaProvider._buildSequences,
@@ -168,8 +164,7 @@ export class InformationSchemaProvider {
     parameters: InformationSchemaProvider._buildParameters,
     foreign_tables: InformationSchemaProvider._buildForeignTables,
     foreign_servers: InformationSchemaProvider._buildForeignServers,
-    foreign_server_options:
-      InformationSchemaProvider._buildForeignServerOptions,
+    foreign_server_options: InformationSchemaProvider._buildForeignServerOptions,
     foreign_table_options: InformationSchemaProvider._buildForeignTableOptions,
     enabled_roles: InformationSchemaProvider._buildEnabledRoles,
     applicable_roles: InformationSchemaProvider._buildApplicableRoles,
@@ -184,11 +179,7 @@ export class InformationSchemaProvider {
     return Object.keys(InformationSchemaProvider._VIEWS);
   }
 
-  static build(
-    viewName: string,
-    engine: Engine,
-    oids: OIDAllocator,
-  ): BuildResult {
+  static build(viewName: string, engine: Engine, oids: OIDAllocator): BuildResult {
     const builder = InformationSchemaProvider._VIEWS[viewName];
     if (builder === undefined) {
       throw new Error(`Unknown information_schema view: '${viewName}'`);
@@ -430,9 +421,7 @@ export class InformationSchemaProvider {
               : numericPrecision(effType),
           numeric_precision_radix: numericPrecisionRadix(effType),
           numeric_scale:
-            cdef.numericScale !== null
-              ? cdef.numericScale
-              : numericScale(effType),
+            cdef.numericScale !== null ? cdef.numericScale : numericScale(effType),
           datetime_precision: dtPrecision,
           interval_type: null,
           interval_precision: null,

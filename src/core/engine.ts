@@ -48,9 +48,8 @@ function normalizeRows(rows: Row[]): Row[] {
 // data for _tempTables and _indexManager.
 function buildCompilerState(
   compiler: Record<string, unknown>,
-  engine: Engine,
+  eng: Record<string, unknown>,
 ): unknown {
-  const eng = engine as unknown as Record<string, unknown>;
   return {
     _tables: compiler["_tables"],
     _views: compiler["_views"],
@@ -81,7 +80,8 @@ export class USQLEngine extends Engine {
     const compiler = (this as unknown as Record<string, unknown>)[
       "_compiler"
     ] as Record<string, unknown>;
-    const engine = this;
+    const getOids = this._getOids.bind(this);
+    const eng = this as unknown as Record<string, unknown>;
 
     // Access the compiler's _applyAlias method for alias handling
     const applyAlias = compiler["_applyAlias"] as (
@@ -95,16 +95,9 @@ export class USQLEngine extends Engine {
       viewName: string,
       alias: string,
     ): Row[] {
-      const state = buildCompilerState(
-        this as unknown as Record<string, unknown>,
-        engine,
-      );
-      const oids = engine._getOids(state);
-      const [, rows] = InformationSchemaProvider.build(
-        viewName,
-        state as Engine,
-        oids,
-      );
+      const state = buildCompilerState(this as unknown as Record<string, unknown>, eng);
+      const oids = getOids(state);
+      const [, rows] = InformationSchemaProvider.build(viewName, state as Engine, oids);
       const normalized = normalizeRows(rows);
       return applyAlias.call(this, normalized, alias);
     };
@@ -114,16 +107,9 @@ export class USQLEngine extends Engine {
       viewName: string,
       alias: string,
     ): Row[] {
-      const state = buildCompilerState(
-        this as unknown as Record<string, unknown>,
-        engine,
-      );
-      const oids = engine._getOids(state);
-      const [, rows] = PGCatalogProvider.build(
-        viewName,
-        state as Engine,
-        oids,
-      );
+      const state = buildCompilerState(this as unknown as Record<string, unknown>, eng);
+      const oids = getOids(state);
+      const [, rows] = PGCatalogProvider.build(viewName, state as Engine, oids);
       const normalized = normalizeRows(rows);
       return applyAlias.call(this, normalized, alias);
     };
@@ -132,17 +118,12 @@ export class USQLEngine extends Engine {
   private _getOids(state?: unknown): OIDAllocator {
     if (this._oidAllocator === null) {
       // Pass the composite state (with compiler tables) to OIDAllocator
-      this._oidAllocator = new OIDAllocator(
-        (state ?? this) as Engine,
-      );
+      this._oidAllocator = new OIDAllocator((state ?? this) as Engine);
     }
     return this._oidAllocator;
   }
 
-  override async sql(
-    query: string,
-    params?: unknown[],
-  ): Promise<SQLResult | null> {
+  override async sql(query: string, params?: unknown[]): Promise<SQLResult | null> {
     // Reset OID allocator for each query to ensure consistent OIDs
     // within a single query execution while allowing for schema changes
     // between queries.

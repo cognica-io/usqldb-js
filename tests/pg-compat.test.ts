@@ -44,9 +44,7 @@ describe("PostgreSQL 17 catalog compatibility", () => {
         "is_active BOOLEAN DEFAULT true" +
         ")",
     );
-    await engine.sql(
-      "CREATE VIEW dept_summary AS SELECT name FROM departments",
-    );
+    await engine.sql("CREATE VIEW dept_summary AS SELECT name FROM departments");
     await engine.sql("CREATE SEQUENCE invoice_seq START 1000 INCREMENT 5");
     await engine.sql("INSERT INTO departments (name) VALUES ('Engineering')");
     await engine.sql("INSERT INTO departments (name) VALUES ('Sales')");
@@ -67,9 +65,7 @@ describe("PostgreSQL 17 catalog compatibility", () => {
         "SELECT schema_name FROM information_schema.schemata",
       );
       const names = new Set(rows(r).map((row) => row["schema_name"]));
-      expect(names).toEqual(
-        new Set(["public", "information_schema", "pg_catalog"]),
-      );
+      expect(names).toEqual(new Set(["public", "information_schema", "pg_catalog"]));
     });
 
     it("has catalog name", async () => {
@@ -131,14 +127,7 @@ describe("PostgreSQL 17 catalog compatibility", () => {
           "WHERE table_name = 'employees' ORDER BY ordinal_position",
       );
       const cols = rows(r).map((row) => row["column_name"]);
-      expect(cols).toEqual([
-        "id",
-        "dept_id",
-        "name",
-        "email",
-        "salary",
-        "is_active",
-      ]);
+      expect(cols).toEqual(["id", "dept_id", "name", "email", "salary", "is_active"]);
     });
 
     it("shows correct data types", async () => {
@@ -368,18 +357,12 @@ describe("PostgreSQL 17 catalog compatibility", () => {
     });
 
     it("returns empty domains", async () => {
-      const r = await query(
-        engine,
-        "SELECT * FROM information_schema.domains",
-      );
+      const r = await query(engine, "SELECT * FROM information_schema.domains");
       expect(rows(r).length).toBe(0);
     });
 
     it("returns empty triggers", async () => {
-      const r = await query(
-        engine,
-        "SELECT * FROM information_schema.triggers",
-      );
+      const r = await query(engine, "SELECT * FROM information_schema.triggers");
       expect(rows(r).length).toBe(0);
     });
   });
@@ -618,10 +601,7 @@ describe("PostgreSQL 17 catalog compatibility", () => {
 
   describe("pg_catalog other tables", () => {
     it("shows pg_database", async () => {
-      const r = await query(
-        engine,
-        "SELECT datname FROM pg_catalog.pg_database",
-      );
+      const r = await query(engine, "SELECT datname FROM pg_catalog.pg_database");
       expect(rows(r)[0]!["datname"]).toBe("uqa");
     });
 
@@ -657,10 +637,7 @@ describe("PostgreSQL 17 catalog compatibility", () => {
     });
 
     it("shows pg_views", async () => {
-      const r = await query(
-        engine,
-        "SELECT viewname FROM pg_catalog.pg_views",
-      );
+      const r = await query(engine, "SELECT viewname FROM pg_catalog.pg_views");
       const names = new Set(rows(r).map((row) => row["viewname"]));
       expect(names).toContain("dept_summary");
     });
@@ -711,28 +688,19 @@ describe("PostgreSQL 17 catalog compatibility", () => {
     });
 
     it("shows pg_extension", async () => {
-      const r = await query(
-        engine,
-        "SELECT extname FROM pg_catalog.pg_extension",
-      );
+      const r = await query(engine, "SELECT extname FROM pg_catalog.pg_extension");
       expect(rows(r)[0]!["extname"]).toBe("plpgsql");
     });
 
     it("shows pg_collation", async () => {
-      const r = await query(
-        engine,
-        "SELECT collname FROM pg_catalog.pg_collation",
-      );
+      const r = await query(engine, "SELECT collname FROM pg_catalog.pg_collation");
       const names = new Set(rows(r).map((row) => row["collname"]));
       expect(names).toContain("default");
       expect(names).toContain("C");
     });
 
     it("returns empty pg_description", async () => {
-      const r = await query(
-        engine,
-        "SELECT * FROM pg_catalog.pg_description",
-      );
+      const r = await query(engine, "SELECT * FROM pg_catalog.pg_description");
       expect(rows(r).length).toBe(0);
     });
 
@@ -875,19 +843,13 @@ describe("PostgreSQL 17 catalog compatibility", () => {
 
     it("pg_type is still populated", async () => {
       const e = new USQLEngine();
-      const r = await query(
-        e,
-        "SELECT COUNT(*) AS cnt FROM pg_catalog.pg_type",
-      );
+      const r = await query(e, "SELECT COUNT(*) AS cnt FROM pg_catalog.pg_type");
       expect((rows(r)[0]!["cnt"] as number) > 20).toBe(true);
     });
 
     it("pg_settings is still populated", async () => {
       const e = new USQLEngine();
-      const r = await query(
-        e,
-        "SELECT COUNT(*) AS cnt FROM pg_catalog.pg_settings",
-      );
+      const r = await query(e, "SELECT COUNT(*) AS cnt FROM pg_catalog.pg_settings");
       expect((rows(r)[0]!["cnt"] as number) > 10).toBe(true);
     });
   });

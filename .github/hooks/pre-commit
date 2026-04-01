@@ -1,0 +1,14 @@
+#!/bin/sh
+set -e
+
+# Type check
+npx tsc --noEmit
+
+# Lint
+npm run lint
+
+# Format check
+npm run format:check
+
+# Tests
+npm test

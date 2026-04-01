@@ -16,7 +16,6 @@
 //     16384+      User-defined objects (tables, indexes, constraints)
 
 import type { Engine } from "@jaepil/uqa";
-import type { Table } from "@jaepil/uqa";
 
 // ======================================================================
 // Built-in type OIDs (matching PostgreSQL 17)
@@ -462,10 +461,7 @@ export class OIDAllocator {
       }
 
       for (const [checkName] of table.checkConstraints) {
-        this._map.set(
-          `constraint:${tname}_${checkName}_check`,
-          this._alloc(),
-        );
+        this._map.set(`constraint:${tname}_${checkName}_check`, this._alloc());
       }
     }
   }
@@ -484,12 +480,7 @@ export class OIDAllocator {
   }
 
   relationOid(name: string, _engine: Engine): number | null {
-    for (const category of [
-      "table",
-      "view",
-      "foreign_table",
-      "sequence",
-    ] as const) {
+    for (const category of ["table", "view", "foreign_table", "sequence"] as const) {
       const oid = this._map.get(`${category}:${name}`);
       if (oid !== undefined) return oid;
     }
