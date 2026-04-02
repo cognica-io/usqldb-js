@@ -1,8 +1,5 @@
-//
 // usqldb -- PostgreSQL 17-compatible catalog layer for UQA
-//
 // Copyright (c) 2023-2026 Cognica, Inc.
-//
 
 // PostgreSQL OID allocation and type mapping.
 //
@@ -110,7 +107,7 @@ export const AM_HEAP = 2;
 export const AM_HNSW = 16386;
 export const AM_IVF = 16387;
 
-// pg_class OIDs for system catalogs
+// pg_class OIDs for system catalogs (needed for pg_description.classoid)
 export const CLASS_PG_CLASS = 1259;
 export const CLASS_PG_TYPE = 1247;
 export const CLASS_PG_NAMESPACE = 2615;

@@ -1,7 +1,7 @@
 {
   "name": "@jaepil/usqldb",
-  "version": "0.1.0",
-  "description": "PostgreSQL 17-compatible information_schema and pg_catalog for UQA",
+  "version": "0.2.0",
+  "description": "PostgreSQL 17-compatible information_schema, pg_catalog, wire protocol server, and interactive CLI for UQA",
   "license": "AGPL-3.0-only",
   "author": "Jaepil Jeong <jaepil@cognica.io>",
   "repository": {
@@ -12,9 +12,13 @@
     "postgresql",
     "information-schema",
     "pg-catalog",
+    "pgwire",
+    "wire-protocol",
     "uqa",
     "sql",
     "compatibility",
+    "system-catalog",
+    "typescript",
     "browser"
   ],
   "type": "module",
@@ -44,12 +48,14 @@
     "prepublishOnly": "npm run build"
   },
   "dependencies": {
-    "@jaepil/uqa": "^0.2.0"
+    "@jaepil/uqa": "^0.3.1"
   },
   "devDependencies": {
+    "@types/pg": "^8.20.0",
     "@typescript-eslint/eslint-plugin": "^8.0.0",
     "@typescript-eslint/parser": "^8.0.0",
     "eslint": "^9.0.0",
+    "pg": "^8.20.0",
     "prettier": "^3.0.0",
     "typescript": "^5.6.0",
     "typescript-eslint": "^8.0.0",

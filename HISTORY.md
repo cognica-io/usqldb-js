@@ -1,5 +1,48 @@
 # History
 
+## 0.2.0 (2026-04-02)
+
+### PostgreSQL Wire Protocol Server
+
+- Full PostgreSQL v3 wire protocol implementation (`net/pgwire`).
+- Simple Query and Extended Query (Parse/Bind/Describe/Execute/Sync) support.
+- SCRAM-SHA-256, MD5, and trust authentication methods.
+- PostgreSQL type serialization/deserialization for text and binary formats.
+- Streaming TCP read buffer for efficient message framing.
+- Connect with psql, DBeaver, DataGrip, JDBC, psycopg, asyncpg, node-postgres, and any other PostgreSQL client.
+
+### Interactive SQL Shell
+
+- psql-style interactive REPL (`cli/shell`).
+- Backslash commands: `\d`, `\dt`, `\di`, `\dv`, `\ds`, `\df`, `\dn`, `\du`, `\l`, `\det`, `\des`, `\dew`, `\x`, `\timing`, `\o`, `\i`, `\e`, `\conninfo`, `\encoding`, `\!`, `\?`, `\q`.
+- Context-aware SQL tab-completion for keywords, table/view/column names, and backslash commands.
+- psql-compatible output formatter with aligned and expanded (`\x`) display modes.
+- CLI entry point: `npx usqldb [--db PATH] [-c COMMAND]`.
+
+### Persistent Storage
+
+- Lazy-initialized SQLite persistence — `USQLEngine({ dbPath })` automatically creates and restores file-based databases.
+- Data survives across process restarts without manual `init()` calls.
+
+### Catalog Improvements
+
+- 35 `pg_catalog` tables (added `pg_stat_all_tables`).
+- Empty catalog tables now correctly return column metadata for SELECT *.
+- Fixed `pg_stat_activity.pid` to use `process.pid` instead of `Date.now()`.
+- Fixed `atthasdef` to match Python's `is not None` semantics.
+- Parameterized query support with automatic text-to-typed coercion.
+
+### Testing
+
+- 356 tests across 9 test files (up from 69 tests in v0.1.0).
+- 94 catalog completeness tests covering all 35 pg_catalog tables and 23 information_schema views.
+- Wire protocol server, authentication, message codec, type codec, buffer, and error response tests.
+- CLI and backslash command tests.
+
+### Examples
+
+- 10 examples demonstrating basic usage, persistent storage, catalog introspection, wire protocol server, authentication, client connections, shared engine, advanced schemas, and CLI usage.
+
 ## 0.1.0 (2026-04-01)
 
 Initial release. TypeScript port of [usqldb](https://github.com/cognica-io/usqldb).

@@ -506,11 +506,8 @@ export class PGCatalogProvider {
         const storage = TYPE_STORAGE[colTypeOid] ?? "p";
         const ndims = cdef.typeName.endsWith("[]") ? 1 : 0;
         const hasDefault =
-          cdef.defaultValue !== null &&
-          cdef.defaultValue !== undefined &&
-          cdef.defaultValue !== false
-            ? true
-            : cdef.autoIncrement;
+          (cdef.defaultValue !== null && cdef.defaultValue !== undefined) ||
+          cdef.autoIncrement;
         const identity = cdef.autoIncrement ? "d" : "";
 
         // String types use default collation
@@ -2288,12 +2285,11 @@ export class PGCatalogProvider {
       "query",
       "backend_type",
     ];
-    // Use Date.now() instead of os.getpid() since this runs in a browser
     const rows: Row[] = [
       {
         datid: DATABASE_OID,
         datname: CATALOG_NAME,
-        pid: Date.now(),
+        pid: process.pid,
         leader_pid: null,
         usesysid: ROLE_OID,
         usename: OWNER,

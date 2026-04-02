@@ -9,16 +9,19 @@ authors:
     affiliation: "Cognica, Inc."
 repository-code: "https://github.com/cognica-io/usqldb-js"
 license: AGPL-3.0-only
-version: 0.1.0
-date-released: "2026-04-01"
+version: 0.2.0
+date-released: "2026-04-02"
 abstract: >-
-  PostgreSQL 17-compatible information_schema and pg_catalog layer for UQA,
-  enabling standard PostgreSQL tools to introspect UQA databases.
-  TypeScript port that runs in web browsers and Node.js.
+  PostgreSQL 17-compatible information_schema, pg_catalog, wire protocol
+  server, and interactive CLI for UQA. Enables standard PostgreSQL tools
+  to introspect and connect to UQA databases. TypeScript port that runs
+  in web browsers and Node.js.
 keywords:
   - postgresql
   - information-schema
   - pg-catalog
+  - pgwire
+  - wire-protocol
   - uqa
   - sql
   - compatibility
