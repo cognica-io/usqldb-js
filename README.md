@@ -1,6 +1,6 @@
 # usqldb-js
 
-PostgreSQL 17-compatible `information_schema` and `pg_catalog` layer for [UQA](https://github.com/cognica-io/uqa-js).
+PostgreSQL 17-compatible layer for [UQA](https://github.com/cognica-io/uqa-js) — system catalogs, psql-style CLI, and wire protocol server.
 
 usqldb-js extends the UQA SQL engine with a comprehensive set of PostgreSQL system catalog views so that standard PostgreSQL tools — psql, SQLAlchemy, DBeaver, DataGrip, Django, and others — can introspect the database as if it were a real PostgreSQL 17 instance.
 
