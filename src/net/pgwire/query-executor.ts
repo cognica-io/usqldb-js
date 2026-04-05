@@ -10,7 +10,7 @@
 // DISCARD, BEGIN, COMMIT, ROLLBACK).
 
 import { FORMAT_TEXT } from "./constants.js";
-import { mapEngineException } from "./errors.js";
+import { QueryCanceled, mapEngineException } from "./errors.js";
 import type { ColumnDescription } from "./messages.js";
 import { TypeCodec } from "./type-codec.js";
 import { TYPE_LENGTHS, typeOid } from "../../pg-compat/oid.js";
@@ -131,6 +131,9 @@ export class QueryExecutor {
       const result = await this._engine.sql(query, params ?? undefined);
       return this._buildResult(query, result);
     } catch (exc) {
+      if (exc instanceof Error && exc.name === "QueryCancelled") {
+        throw new QueryCanceled("canceling statement due to user request");
+      }
       throw mapEngineException(exc);
     }
   }

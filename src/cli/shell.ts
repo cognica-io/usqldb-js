@@ -28,7 +28,7 @@ import * as path from "node:path";
 import { USQLEngine } from "../core/engine.js";
 import { CommandHandler } from "./command-handler.js";
 import { Completer } from "./completer.js";
-import { Formatter } from "./formatter.js";
+import { ANSI, Formatter } from "./formatter.js";
 
 interface SQLResult {
   readonly columns: string[];
@@ -44,13 +44,16 @@ export class USQLShell {
   private readonly _formatter: Formatter;
   private readonly _commands: CommandHandler;
   private readonly _completer: Completer;
+  private readonly _useColor: boolean;
   private _rl: readline.Interface | null = null;
 
   constructor(opts?: { dbPath?: string }) {
     this._dbPath = opts?.dbPath ?? null;
     this._engine = new USQLEngine({ dbPath: opts?.dbPath });
+    this._useColor = process.stdout.isTTY === true;
 
     this._formatter = new Formatter();
+    this._formatter.useColor = this._useColor;
     this._commands = new CommandHandler(this._engine, this._formatter, (text: string) =>
       console.log(text),
     );
@@ -119,7 +122,7 @@ export class USQLShell {
                 return;
               }
             } catch (exc) {
-              console.log(`ERROR: ${exc}`);
+              console.log(this._colorError(`ERROR: ${exc}`));
             }
             askLine();
             return;
@@ -196,14 +199,14 @@ export class USQLShell {
     try {
       result = await this._engine.sql(stmt);
     } catch (exc) {
-      console.log(`ERROR: ${exc}`);
+      console.log(this._colorError(`ERROR: ${exc}`));
       return;
     }
     const elapsed = performance.now() - t0;
 
     this._printResult(result);
     if (this._commands.showTiming) {
-      this._print(`Time: ${elapsed.toFixed(3)} ms`);
+      this._print(this._colorDim(`Time: ${elapsed.toFixed(3)} ms`));
     }
   }
 
@@ -226,6 +229,24 @@ export class USQLShell {
     } else {
       console.log(text);
     }
+  }
+
+  // ------------------------------------------------------------------
+  // Color helpers
+  // ------------------------------------------------------------------
+
+  private _colorError(text: string): string {
+    if (!this._useColor) {
+      return text;
+    }
+    return ANSI.red + text + ANSI.reset;
+  }
+
+  private _colorDim(text: string): string {
+    if (!this._useColor) {
+      return text;
+    }
+    return ANSI.dim + text + ANSI.reset;
   }
 
   // ------------------------------------------------------------------

@@ -9,8 +9,8 @@ authors:
     affiliation: "Cognica, Inc."
 repository-code: "https://github.com/cognica-io/usqldb-js"
 license: AGPL-3.0-only
-version: 0.2.0
-date-released: "2026-04-02"
+version: 0.3.0
+date-released: "2026-04-05"
 abstract: >-
   PostgreSQL 17-compatible information_schema, pg_catalog, wire protocol
   server, and interactive CLI for UQA. Enables standard PostgreSQL tools

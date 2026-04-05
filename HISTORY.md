@@ -1,5 +1,27 @@
 # History
 
+## 0.3.0 (2026-04-05)
+
+### Live pg_stat_activity
+
+- `pg_stat_activity` now reflects real pgwire connections --- pid, usename, datname, client_addr, state, and query text are populated from the live connection registry.
+
+### Query Cancellation
+
+- pgwire `CancelRequest` cancels in-flight queries through UQA-JS's `CancellationToken`, checked in operator hot loops. The server sends SQLSTATE 57014 (`query_canceled`) to the client.
+
+### Connection Registry
+
+- `ConnectionRegistry` (`src/pg-compat/connection-registry.ts`) tracks active pgwire sessions, providing the data source for `pg_stat_activity` and the cancellation key lookup for `CancelRequest`.
+
+### ANSI Color Output in CLI
+
+- Bold column headers, dim separators/footers/NULL values, colored booleans (cyan true, red false), red error messages, and dim timing. Automatically disabled when output is piped (non-TTY).
+
+### Testing
+
+- 356 tests across 9 test files.
+
 ## 0.2.0 (2026-04-02)
 
 ### PostgreSQL Wire Protocol Server

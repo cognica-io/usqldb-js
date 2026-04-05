@@ -1,6 +1,6 @@
 {
   "name": "@jaepil/usqldb",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "PostgreSQL 17-compatible information_schema, pg_catalog, wire protocol server, and interactive CLI for UQA",
   "license": "AGPL-3.0-only",
   "author": "Jaepil Jeong <jaepil@cognica.io>",
@@ -48,7 +48,7 @@
     "prepublishOnly": "npm run build"
   },
   "dependencies": {
-    "@jaepil/uqa": "^0.3.1"
+    "@jaepil/uqa": "^0.3.7"
   },
   "devDependencies": {
     "@types/pg": "^8.20.0",

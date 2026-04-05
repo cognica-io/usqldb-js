@@ -11,7 +11,7 @@ TypeScript port of [usqldb](https://github.com/cognica-io/usqldb) that runs in *
 - **23 information_schema views** — schemata, tables, columns, constraints, views, sequences, routines, foreign tables, triggers, and more.
 - **35 pg_catalog tables** — pg_class, pg_attribute, pg_type, pg_constraint, pg_index, pg_proc, pg_settings, statistics views, and more, with consistent OID cross-references across all of them.
 - **PostgreSQL v3 wire protocol server** — full Simple Query and Extended Query support with SCRAM-SHA-256 / MD5 / trust authentication. Connect with psql, DBeaver, DataGrip, JDBC, psycopg, asyncpg, node-postgres, and any other PostgreSQL client.
-- **Interactive SQL shell** — psql-style REPL with backslash commands (`\d`, `\dt`, `\di`, `\dv`, `\ds`, `\df`, `\dn`, `\du`, `\l`, `\det`, `\des`, `\dew`, `\x`, `\timing`, `\o`, `\i`, `\e`), tab-completion, expanded display, query timing, and multi-line editing.
+- **Interactive SQL shell** — psql-style REPL with backslash commands (`\d`, `\dt`, `\di`, `\dv`, `\ds`, `\df`, `\dn`, `\du`, `\l`, `\det`, `\des`, `\dew`, `\x`, `\timing`, `\o`, `\i`, `\e`), tab-completion, expanded display, query timing, multi-line editing, and ANSI color output (automatically disabled when piped).
 - **Drop-in engine** — `USQLEngine` is a drop-in replacement for `Engine` from `@jaepil/uqa`. Import it, and every query gets full catalog support.
 - **Persistent storage** — file-based SQLite databases that survive across process restarts.
 - **Browser-compatible** — ESM and UMD builds with no Node.js-specific APIs.
@@ -19,7 +19,7 @@ TypeScript port of [usqldb](https://github.com/cognica-io/usqldb) that runs in *
 ## Requirements
 
 - Node.js 20+ (for development and testing)
-- `@jaepil/uqa` >= 0.3.1
+- `@jaepil/uqa` >= 0.3.7
 
 ## Installation
 

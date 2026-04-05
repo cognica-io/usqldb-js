@@ -32,6 +32,7 @@ import {
   typeOid,
 } from "./oid.js";
 import type { OIDAllocator } from "./oid.js";
+import { getAllConnections } from "./connection-registry.js";
 
 type Row = Record<string, unknown>;
 type BuildResult = [string[], Row[]];
@@ -2285,32 +2286,64 @@ export class PGCatalogProvider {
       "query",
       "backend_type",
     ];
-    const rows: Row[] = [
-      {
+
+    const liveConnections = getAllConnections();
+    let rows: Row[];
+
+    if (liveConnections.length > 0) {
+      rows = liveConnections.map((conn) => ({
         datid: DATABASE_OID,
-        datname: CATALOG_NAME,
-        pid: process.pid,
+        datname: conn.database || CATALOG_NAME,
+        pid: conn.pid,
         leader_pid: null,
         usesysid: ROLE_OID,
-        usename: OWNER,
-        application_name: "usqldb",
-        client_addr: null,
+        usename: conn.username || OWNER,
+        application_name: conn.applicationName,
+        client_addr: conn.clientAddr,
         client_hostname: null,
-        client_port: -1,
-        backend_start: null,
-        xact_start: null,
-        query_start: null,
-        state_change: null,
+        client_port: conn.clientPort,
+        backend_start: conn.backendStart?.toISOString() ?? null,
+        xact_start: conn.xactStart?.toISOString() ?? null,
+        query_start: conn.queryStart?.toISOString() ?? null,
+        state_change: conn.stateChange?.toISOString() ?? null,
         wait_event_type: null,
         wait_event: null,
-        state: "active",
+        state: conn.state,
         backend_xid: null,
         backend_xmin: null,
         query_id: null,
-        query: "",
-        backend_type: "client backend",
-      },
-    ];
+        query: conn.query,
+        backend_type: conn.backendType,
+      }));
+    } else {
+      rows = [
+        {
+          datid: DATABASE_OID,
+          datname: CATALOG_NAME,
+          pid: process.pid,
+          leader_pid: null,
+          usesysid: ROLE_OID,
+          usename: OWNER,
+          application_name: "usqldb",
+          client_addr: null,
+          client_hostname: null,
+          client_port: -1,
+          backend_start: null,
+          xact_start: null,
+          query_start: null,
+          state_change: null,
+          wait_event_type: null,
+          wait_event: null,
+          state: "active",
+          backend_xid: null,
+          backend_xmin: null,
+          query_id: null,
+          query: "",
+          backend_type: "client backend",
+        },
+      ];
+    }
+
     return [columns, rows];
   }
 

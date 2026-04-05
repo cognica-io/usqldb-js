@@ -27,6 +27,7 @@ import {
   InFailedSQLTransaction,
   PGWireError,
   ProtocolViolation,
+  QueryCanceled,
   mapEngineException,
 } from "./errors.js";
 import type {
@@ -45,6 +46,11 @@ import { QueryExecutor, QueryResult } from "./query-executor.js";
 import { TypeCodec } from "./type-codec.js";
 
 import type { USQLEngine } from "../../core/engine.js";
+import {
+  registerConnection,
+  unregisterConnection,
+} from "../../pg-compat/connection-registry.js";
+import type { ConnectionInfo } from "../../pg-compat/connection-registry.js";
 
 // ======================================================================
 // SocketReader -- buffered reading from a TCP socket
@@ -257,6 +263,16 @@ export class PGWireConnection {
   private _closed: boolean;
   private _canceled: boolean;
 
+  private _backendStart: Date | null;
+  private _queryStart: Date | null;
+  private _stateChange: Date | null;
+  private _currentQuery: string;
+  private _state: string;
+  private _clientAddr: string | null;
+  private _clientPort: number;
+  private _applicationName: string;
+  private _registryInfo: ConnectionInfo | null;
+
   constructor(
     socket: net.Socket,
     engine: USQLEngine,
@@ -288,6 +304,16 @@ export class PGWireConnection {
     this._database = "";
     this._closed = false;
     this._canceled = false;
+
+    this._backendStart = null;
+    this._queryStart = null;
+    this._stateChange = null;
+    this._currentQuery = "";
+    this._state = "idle";
+    this._clientAddr = null;
+    this._clientPort = 0;
+    this._applicationName = "";
+    this._registryInfo = null;
   }
 
   get processId(): number {
@@ -301,6 +327,7 @@ export class PGWireConnection {
   /** Mark this connection's current query as canceled. */
   cancel(): void {
     this._canceled = true;
+    this._engine.cancel();
   }
 
   // ==================================================================
@@ -309,12 +336,17 @@ export class PGWireConnection {
 
   async run(): Promise<void> {
     try {
+      this._backendStart = new Date();
+      this._clientAddr = this._socket.remoteAddress ?? null;
+      this._clientPort = this._socket.remotePort ?? 0;
+
       const startup = await this._handleStartup();
       if (startup === null) {
         return; // SSL/Cancel handled, connection closed.
       }
 
       await this._authenticate(startup);
+      this._registerWithRegistry();
       await this._sendStartupParameters(startup);
       await this._mainLoop();
     } catch (err) {
@@ -400,6 +432,7 @@ export class PGWireConnection {
   private async _authenticate(startup: StartupMessage): Promise<void> {
     this._username = startup.parameters["user"] ?? "";
     this._database = startup.parameters["database"] ?? this._username;
+    this._applicationName = startup.parameters["application_name"] ?? "";
 
     const auth = createAuthenticator(
       this._authMethod,
@@ -553,6 +586,17 @@ export class PGWireConnection {
         continue;
       }
 
+      if (this._canceled) {
+        this._canceled = false;
+        await this._sendError(
+          new QueryCanceled("canceling statement due to user request"),
+        );
+        if (this._txStatus === TX_IN_TRANSACTION) {
+          this._txStatus = TX_FAILED;
+        }
+        break;
+      }
+
       if (this._txStatus === TX_FAILED) {
         // In a failed transaction, reject all commands except
         // ROLLBACK / COMMIT.
@@ -574,7 +618,20 @@ export class PGWireConnection {
       }
 
       try {
+        this._updateRegistryState("active", stmt);
         const result = await this._executor.execute(stmt);
+
+        if (this._canceled) {
+          this._canceled = false;
+          await this._sendError(
+            new QueryCanceled("canceling statement due to user request"),
+          );
+          if (this._txStatus === TX_IN_TRANSACTION) {
+            this._txStatus = TX_FAILED;
+          }
+          break;
+        }
+
         await this._sendQueryResult(result);
       } catch (exc) {
         if (exc instanceof PGWireError) {
@@ -589,6 +646,11 @@ export class PGWireConnection {
       }
     }
 
+    if (this._txStatus === TX_IN_TRANSACTION || this._txStatus === TX_FAILED) {
+      this._updateRegistryState("idle in transaction");
+    } else {
+      this._updateRegistryState("idle");
+    }
     await this._sendReadyForQuery();
   }
 
@@ -792,6 +854,12 @@ export class PGWireConnection {
         throw new PGWireError(`portal "${msg.portalName}" does not exist`);
       }
 
+      // Check cancellation before execution.
+      if (this._canceled) {
+        this._canceled = false;
+        throw new QueryCanceled("canceling statement due to user request");
+      }
+
       // Check transaction state.
       if (this._txStatus === TX_FAILED) {
         throw new InFailedSQLTransaction(
@@ -802,10 +870,17 @@ export class PGWireConnection {
 
       // Execute if not cached.
       if (portal.resultCache === null) {
+        this._updateRegistryState("active", portal.statement.query);
         const result = await this._executor.execute(
           portal.statement.query,
           portal.paramValues.length > 0 ? portal.paramValues : null,
         );
+
+        if (this._canceled) {
+          this._canceled = false;
+          throw new QueryCanceled("canceling statement due to user request");
+        }
+
         portal.resultCache = result;
       }
 
@@ -880,6 +955,11 @@ export class PGWireConnection {
   }
 
   private async _handleSync(): Promise<void> {
+    if (this._txStatus === TX_IN_TRANSACTION || this._txStatus === TX_FAILED) {
+      this._updateRegistryState("idle in transaction");
+    } else {
+      this._updateRegistryState("idle");
+    }
     await this._sendReadyForQuery();
   }
 
@@ -964,12 +1044,56 @@ export class PGWireConnection {
 
   private _close(): void {
     this._closed = true;
+    unregisterConnection(this._processId);
+    this._registryInfo = null;
     try {
       if (!this._socket.destroyed) {
         this._socket.destroy();
       }
     } catch {
       // Ignore cleanup errors
+    }
+  }
+
+  private _registerWithRegistry(): void {
+    const info: ConnectionInfo = {
+      pid: this._processId,
+      username: this._username,
+      database: this._database,
+      applicationName: this._applicationName,
+      clientAddr: this._clientAddr,
+      clientPort: this._clientPort,
+      backendStart: this._backendStart,
+      xactStart: null,
+      queryStart: null,
+      stateChange: new Date(),
+      state: "idle",
+      query: "",
+      backendType: "client backend",
+    };
+    this._registryInfo = info;
+    registerConnection(info);
+  }
+
+  private _updateRegistryState(state: string, query?: string): void {
+    if (this._registryInfo === null) {
+      return;
+    }
+    const now = new Date();
+    this._state = state;
+    this._stateChange = now;
+    this._registryInfo.state = state;
+    this._registryInfo.stateChange = now;
+    if (query !== undefined) {
+      this._currentQuery = query;
+      this._registryInfo.query = query;
+    }
+    if (state === "active") {
+      this._queryStart = now;
+      this._registryInfo.queryStart = now;
+    }
+    if (state === "idle in transaction" || state === "idle") {
+      // Keep queryStart from the last active transition
     }
   }
 }

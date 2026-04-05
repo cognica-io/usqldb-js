@@ -12,6 +12,14 @@ interface SQLResult {
   readonly rows: Row[];
 }
 
+export const ANSI = {
+  reset: "\x1b[0m",
+  bold: "\x1b[1m",
+  dim: "\x1b[2m",
+  red: "\x1b[31m",
+  cyan: "\x1b[36m",
+};
+
 /**
  * Stateful output formatter matching psql display conventions.
  *
@@ -22,6 +30,14 @@ interface SQLResult {
 export class Formatter {
   expanded: boolean = false;
   nullDisplay: string = "";
+  useColor: boolean = true;
+
+  private _wrap(code: string, text: string): string {
+    if (!this.useColor) {
+      return text;
+    }
+    return code + text + ANSI.reset;
+  }
 
   // ------------------------------------------------------------------
   // Public API
@@ -57,30 +73,29 @@ export class Formatter {
 
   private _formatAligned(columns: string[], rows: Row[], title?: string): string {
     if (!rows.length && !columns.length) {
-      return "(0 rows)";
+      return this._wrap(ANSI.dim, "(0 rows)");
     }
 
-    // Stringify all values
     const widths: Map<string, number> = new Map();
     for (const col of columns) {
       widths.set(col, col.length);
     }
 
-    const strRows: Map<string, string>[] = [];
+    const cellRows: Map<string, { text: string; original: unknown }>[] = [];
     for (const row of rows) {
-      const sr = new Map<string, string>();
+      const cr = new Map<string, { text: string; original: unknown }>();
       for (const col of columns) {
-        const s = this._formatValue(row[col]);
-        sr.set(col, s);
+        const original = row[col];
+        const text = this._formatValue(original);
+        cr.set(col, { text, original });
         const current = widths.get(col) ?? 0;
-        widths.set(col, Math.max(current, s.length));
+        widths.set(col, Math.max(current, text.length));
       }
-      strRows.push(sr);
+      cellRows.push(cr);
     }
 
     const parts: string[] = [];
 
-    // Optional title centered above the table
     if (title) {
       let tableWidth = 0;
       for (const col of columns) {
@@ -90,39 +105,42 @@ export class Formatter {
       parts.push(center(title, tableWidth));
     }
 
-    // Header
+    // Header (bold)
     const headerCells = columns.map((col) => {
       const w = widths.get(col) ?? 0;
       return center(col, w);
     });
-    parts.push(" " + headerCells.join(" | "));
+    parts.push(this._wrap(ANSI.bold, " " + headerCells.join(" | ")));
 
-    // Separator
+    // Separator (dim)
     const sepCells = columns.map((col) => {
       const w = widths.get(col) ?? 0;
       return "-".repeat(w);
     });
-    parts.push("-" + sepCells.join("-+-") + "-");
+    parts.push(this._wrap(ANSI.dim, "-" + sepCells.join("-+-") + "-"));
 
     // Data rows
-    for (const sr of strRows) {
+    for (const cr of cellRows) {
       const cells = columns.map((col) => {
         const w = widths.get(col) ?? 0;
-        const val = sr.get(col) ?? "";
-        return ljust(val, w);
+        const cell = cr.get(col)!;
+        const padded = ljust(cell.text, w);
+        return this._colorizeCell(cell.original, padded);
       });
       parts.push(" " + cells.join(" | "));
     }
 
-    // Footer
-    const n = strRows.length;
+    // Footer (dim)
+    const n = cellRows.length;
+    let footer: string;
     if (n === 0) {
-      parts.push("(0 rows)");
+      footer = "(0 rows)";
     } else if (n === 1) {
-      parts.push("(1 row)");
+      footer = "(1 row)";
     } else {
-      parts.push(`(${n} rows)`);
+      footer = `(${n} rows)`;
     }
+    parts.push(this._wrap(ANSI.dim, footer));
 
     return parts.join("\n");
   }
@@ -133,7 +151,7 @@ export class Formatter {
 
   private _formatExpanded(columns: string[], rows: Row[]): string {
     if (!rows.length) {
-      return "(0 rows)";
+      return this._wrap(ANSI.dim, "(0 rows)");
     }
 
     let colWidth = 0;
@@ -145,25 +163,45 @@ export class Formatter {
 
     for (let i = 0; i < rows.length; i++) {
       const row = rows[i]!;
-      // Record header
       const label = `-[ RECORD ${i + 1} ]`;
       const padding = Math.max(0, colWidth + 3 - label.length);
-      parts.push(label + "-".repeat(padding));
-      // Column values
+      parts.push(this._wrap(ANSI.bold, label + "-".repeat(padding)));
       for (const col of columns) {
-        const val = this._formatValue(row[col]);
-        parts.push(`${ljust(col, colWidth)} | ${val}`);
+        const original = row[col];
+        const val = this._formatValue(original);
+        const colorized = this._colorizeCell(original, val);
+        parts.push(`${ljust(col, colWidth)} | ${colorized}`);
       }
     }
 
     const n = rows.length;
+    let footer: string;
     if (n === 1) {
-      parts.push("(1 row)");
+      footer = "(1 row)";
     } else {
-      parts.push(`(${n} rows)`);
+      footer = `(${n} rows)`;
     }
+    parts.push(this._wrap(ANSI.dim, footer));
 
     return parts.join("\n");
+  }
+
+  // ------------------------------------------------------------------
+  // Value colorization
+  // ------------------------------------------------------------------
+
+  private _colorizeCell(original: unknown, padded: string): string {
+    if (!this.useColor) {
+      return padded;
+    }
+    if (original === null || original === undefined) {
+      return ANSI.dim + padded + ANSI.reset;
+    }
+    if (typeof original === "boolean") {
+      const code = original ? ANSI.cyan : ANSI.red;
+      return code + padded + ANSI.reset;
+    }
+    return padded;
   }
 
   // ------------------------------------------------------------------
